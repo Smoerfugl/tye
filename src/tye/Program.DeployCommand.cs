@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
+using Tye;
 
 namespace Microsoft.Tye
 {
@@ -94,6 +95,13 @@ namespace Microsoft.Tye
                 {
                     new ValidateIngressStep() { Environment = environment, Interactive = interactive, Force = force, },
                     new GenerateIngressKubernetesManifestStep(),
+                },
+
+                IngressRouteSteps =
+                {
+                    new ValidateIngressRouteStep() { Environment = environment, Interactive = interactive, Force = force, },
+                    new GenerateIngressRouteKubernetesManifestStep(),
+
                 },
 
                 ApplicationSteps =

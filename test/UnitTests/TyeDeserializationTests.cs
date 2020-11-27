@@ -24,6 +24,37 @@ namespace Microsoft.Tye.UnitTests
         }
 
         [Fact]
+        public void Des()
+        {
+            var input = @"
+services:
+- name: platform
+  project: Hejs.Platform\Hejs.Platform.csproj
+- name: redis
+  image: redis
+  bindings:
+  - port: 6379
+    connectionString: ""${host}:${port}""
+- name: redis-cli
+  image: redis
+  args: ""redis-cli -h redis MONITOR""
+ingressRoute:
+- name: example
+- tls: true
+  entrypoints:
+    name: a.example.com
+  middlewares:
+    - name: whitelist
+    - namespace: default
+
+";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+
+        }
+
+        [Fact]
         public void ComprehensionalTest()
         {
             var input = @"

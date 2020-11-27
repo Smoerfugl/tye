@@ -11,3 +11,11 @@ services:
   buildProperties:
   - name: TargetFramework
     value: netcoreapp3.1
+ingressRoute:
+- name: example
+- tls: true
+  entrypoints:
+    name: a.example.com
+  middlewares:
+    - name: whitelist
+    - namespace: default

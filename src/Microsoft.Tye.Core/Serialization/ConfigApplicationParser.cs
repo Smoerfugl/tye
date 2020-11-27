@@ -41,6 +41,10 @@ namespace Tye.Serialization
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);
                         ConfigExtensionsParser.HandleExtensionsMapping((child.Value as YamlSequenceNode)!, app.Extensions);
                         break;
+                    case "IngressRoute":
+                        YamlParser.ThrowIfNotYamlSequence(key, child.Value);
+                        ConfigIngressRouteParser.HandleIngressRoute((child.Value as YamlSequenceNode)!, app.IngressRoute);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

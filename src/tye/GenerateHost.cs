@@ -44,6 +44,11 @@ namespace Microsoft.Tye
                     new GenerateServiceKubernetesManifestStep() { Environment = environment, },
                 },
 
+                IngressRouteSteps =
+                {
+                    new GenerateIngressRouteKubernetesManifestStep(),
+                },
+
                 IngressSteps =
                 {
                     new GenerateIngressKubernetesManifestStep(),

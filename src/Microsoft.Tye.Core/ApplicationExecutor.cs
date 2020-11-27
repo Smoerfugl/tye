@@ -23,6 +23,8 @@ namespace Microsoft.Tye
 
         public List<IngressStep> IngressSteps { get; } = new List<IngressStep>();
 
+        public List<IngressRouteStep> IngressRouteSteps { get; } = new List<IngressRouteStep>();
+
         public List<ServiceStep> ServiceSteps { get; } = new List<ServiceStep>();
 
         public async Task ExecuteAsync(ApplicationBuilder application)
@@ -51,6 +53,18 @@ namespace Microsoft.Tye
                 tracker.MarkComplete();
             }
 
+            foreach (var ingressRoute in application.IngressRoute)
+            {
+                using var tracker = output.BeginStep($"Processing IngressRoutes '{ingressRoute.Name}'...");
+                foreach (var step in IngressRouteSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application, ingressRoute);
+                    stepTracker.MarkComplete();
+                }
+                tracker.MarkComplete();
+            }
+
             {
                 foreach (var step in ApplicationSteps)
                 {
@@ -73,6 +87,12 @@ namespace Microsoft.Tye
             public abstract string DisplayText { get; }
 
             public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressBuilder ingres);
+        }
+
+        public abstract class IngressRouteStep
+        {
+            public abstract string DisplayText { get; }
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressRouteBuilder ingres);
         }
 
         public abstract class ServiceStep

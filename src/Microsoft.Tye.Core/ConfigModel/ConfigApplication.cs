@@ -36,6 +36,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
 
+        public List<ConfigIngressRoute> IngressRoute { get; set; } = new List<ConfigIngressRoute>();
+
         public void Validate()
         {
             var config = this;
@@ -165,6 +167,19 @@ namespace Microsoft.Tye.ConfigModel
                     {
                         throw new TyeYamlException(CoreStrings.FormatSuccessThresholdMustBeOne(probe.Name));
                     }
+                }
+            }
+
+            foreach (var ingressRoute in config.IngressRoute)
+            {
+                foreach (var entrypoint in ingressRoute.EntryPoints)
+                {
+                    
+                }
+
+                foreach (var ingressRouteMiddleWare in ingressRoute.MiddleWares)
+                {
+                    
                 }
             }
 

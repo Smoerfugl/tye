@@ -12,6 +12,96 @@ namespace Microsoft.Tye
 {
     internal static class KubernetesManifestGenerator
     {
+        public static KubernetesIngressRouteOutput CreateIngressRoute(
+            OutputContext output,
+            ApplicationBuilder application,
+            IngressRouteBuilder ingressRoute)
+        {
+            var root = new YamlMappingNode();
+
+            root.Add("kind", "IngressRoute");
+            root.Add("apiVersion", "traefik.containo.us/v1alpha1");
+
+            var metadata = new YamlMappingNode();
+            root.Add("metadata", metadata);
+            metadata.Add("name", ingressRoute.Name);
+            if (!string.IsNullOrEmpty(application.Namespace))
+            {
+                metadata.Add("namespace", application.Namespace);
+            }
+
+            var labels = new YamlMappingNode();
+            metadata.Add("labels", labels);
+            labels.Add("app.kubernetes.io/part-of", new YamlScalarNode(application.Name) { Style = ScalarStyle.SingleQuoted, });
+
+            var spec = new YamlMappingNode();
+            root.Add("spec", spec);
+
+            if (ingressRoute.Routes.Count > 0)
+            {
+                var entrypoints = new YamlSequenceNode();
+                spec.Add("entrypoints", entrypoints);
+
+                foreach (var hostEntryPoints in ingressRoute.EntryPoints)
+                {
+
+                    var entryPoint = new YamlScalarNode(hostEntryPoints.Name);
+                    entrypoints.Add(entryPoint);
+                }
+
+                var routesNode = new YamlSequenceNode();
+                spec.Add("routes", routesNode);
+
+                foreach (var route in ingressRoute.Routes)
+                {
+                    var rule = new YamlMappingNode();
+                    routesNode.Add(rule);
+
+                    rule.Add("match", $"Host(`{route.Host}`)");
+                    rule.Add("kind", "Rule");
+
+                    var services = new YamlSequenceNode();
+                    rule.Add("services", services);
+
+                    var serviceNode = new YamlMappingNode();
+                    serviceNode.Add("name", route.Service);
+
+                    var service = application.Services.FirstOrDefault(s => s.Name == route.Service);
+                    if (service is null)
+                    {
+                        throw new InvalidOperationException($"Could not resolve service '{route.Service}'.");
+                    }
+
+                    var binding = service.Bindings.FirstOrDefault(b => b.Name is null || b.Name == "http");
+                    if (binding is null)
+                    {
+                        throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
+                    }
+                    serviceNode.Add("port", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+
+                    var middlewares = new YamlSequenceNode();
+                    rule.Add("middlewares", services);
+                    foreach (var middleware in ingressRoute.MiddleWares)
+                    {
+                        var middlewareNode = new YamlMappingNode();
+                        middlewares.Add(middlewareNode);
+                        middlewareNode.Add("name", middleware.Name);
+                        middlewareNode.Add("namespace", middleware.Namespace ?? "default");
+
+                    }
+                }
+
+                if (ingressRoute.Tls == true)
+                {
+                    var secretName = new YamlScalarNode();
+                    spec.Add("tls", secretName);
+                    secretName.Value = ingressRoute.Name;
+                }
+            }
+
+            return new KubernetesIngressRouteOutput(ingressRoute.Name, new YamlDocument(root));
+        }
+
         public static KubernetesIngressOutput CreateIngress(
             OutputContext output,
             ApplicationBuilder application,
